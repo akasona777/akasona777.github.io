@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adivina la Bandera</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Space+Mono:wght@400;700&display=swap');
+
+  :root{
+    --navy: #16233d;
+    --navy-deep: #0e1729;
+    --paper: #f1e8d6;
+    --paper-dark: #e4d8bc;
+    --gold: #c99a3b;
+    --gold-bright: #e0b95a;
+    --ink: #23324f;
+    --stamp-green: #3f6b4c;
+    --stamp-red: #a3392c;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0;
+    padding:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255,255,255,0.03) 0, transparent 35%),
+      radial-gradient(circle at 80% 70%, rgba(255,255,255,0.03) 0, transparent 40%),
+      var(--navy);
+    color: var(--ink);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .stage{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 40px 16px;
+  }
+
+  .start-menu{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 40px 16px;
+  }
+
+  .menu-card{
+    width:100%;
+    max-width:520px;
+    padding:38px 34px 32px;
+    background:var(--paper);
+    background-image:repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(35,50,79,0.05) 28px);
+    border:1px solid rgba(35,50,79,0.15);
+    border-radius:6px;
+    box-shadow:0 30px 60px rgba(0,0,0,0.45), 0 6px 16px rgba(0,0,0,0.3);
+    text-align:center;
+  }
+
+  .menu-card h1{
+    margin:0;
+    color:var(--navy);
+    font-family:'Fraunces', serif;
+    font-size:34px;
+  }
+
+  .menu-card p{
+    margin:10px 0 28px;
+    font-size:13px;
+    line-height:1.5;
+    opacity:.72;
+  }
+
+  .level-list{ display:grid; gap:12px; }
+
+  .level-btn{
+    min-height:76px;
+    padding:14px 18px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    text-align:left;
+    background:var(--navy);
+    color:var(--paper);
+  }
+
+  .level-btn:hover{ background:var(--navy-deep); }
+  .level-btn strong{ font-size:16px; }
+  .level-btn small{ font-size:10px; opacity:.72; }
+  .level-image{
+    width:130px;
+    height:73px;
+    object-fit:cover;
+    border-radius:3px;
+    box-shadow:0 3px 8px rgba(0,0,0,.25);
+  }
+
+  .level-btn.locked{
+    background:transparent;
+    color:var(--ink);
+    border:1px solid rgba(35,50,79,.35);
+    cursor:not-allowed;
+    opacity:.55;
+  }
+
+  .level-btn.locked:hover{ background:transparent; }
+
+  .passport{
+    width: 100%;
+    max-width: 520px;
+    background: var(--paper);
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(35,50,79,0.05) 28px);
+    border-radius: 6px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.4) inset,
+      0 30px 60px rgba(0,0,0,0.45),
+      0 6px 16px rgba(0,0,0,0.3);
+    padding: 34px 34px 30px;
+    position: relative;
+    border: 1px solid rgba(35,50,79,0.15);
+  }
+
+  .passport::before{
+    content:"";
+    position:absolute;
+    inset: 10px;
+    border: 1px dashed rgba(35,50,79,0.25);
+    border-radius: 3px;
+    pointer-events:none;
+  }
+
+  .masthead{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .masthead h1{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size: 27px;
+    letter-spacing: 0.2px;
+    margin:0;
+    line-height: 1.05;
+    color: var(--navy);
+  }
+
+  .masthead .doc-no{
+    font-size: 10.5px;
+    letter-spacing: 1px;
+    color: var(--ink);
+    opacity: 0.55;
+    text-align:right;
+    white-space: nowrap;
+  }
+
+  .score-row{
+    display:flex;
+    gap: 10px;
+    margin-bottom: 24px;
+    font-size: 12px;
+  }
+
+  .score-box{
+    flex:1;
+    text-align:center;
+    padding: 8px 4px 7px;
+    border: 1px solid rgba(35,50,79,0.3);
+    border-radius: 4px;
+    background: rgba(255,255,255,0.25);
+    min-width: 0;
+  }
+
+  .score-box .num{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size: 20px;
+    display:block;
+    color: var(--navy);
+  }
+
+  .score-box.correct .num{ color: var(--stamp-green); }
+  .score-box.wrong .num{ color: var(--stamp-red); }
+  .score-box.revealed .num{ color: var(--gold); }
+
+  .score-box .lbl{
+    opacity:0.6;
+    font-size: 8.5px;
+    letter-spacing: 0.2px;
+  }
+
+  .flag-frame{
+    background: var(--navy-deep);
+    border-radius: 4px;
+    padding: 28px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height: 190px;
+    position: relative;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+    overflow: hidden;
+  }
+
+  .flag-frame img{
+    max-width: 260px;
+    width: 80%;
+    height: auto;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.15);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+  }
+
+  .flag-frame img.swap{
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  .stamp{
+    position:absolute;
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size: 15px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    border: 3px solid currentColor;
+    border-radius: 6px;
+    transform: rotate(-9deg) scale(0.6);
+    opacity: 0;
+    pointer-events:none;
+    top: 50%;
+    left: 50%;
+    margin-top: -22px;
+    margin-left: -70px;
+  }
+
+  .stamp.show{
+    animation: stampIn 0.35s ease-out forwards;
+  }
+
+  .stamp.correct{ color: var(--stamp-green); }
+  .stamp.wrong{ color: var(--stamp-red); }
+  .stamp.revealed{ color: var(--gold); }
+
+  @keyframes stampIn{
+    0%{ opacity:0; transform: rotate(-9deg) scale(1.4); }
+    60%{ opacity:1; transform: rotate(-9deg) scale(0.92); }
+    100%{ opacity:1; transform: rotate(-9deg) scale(1); }
+  }
+
+  form{
+    margin-top: 24px;
+    display:flex;
+    gap: 10px;
+  }
+
+  input[type="text"]{
+    flex:1;
+    font-family:'Space Mono', monospace;
+    font-size: 15px;
+    padding: 12px 14px;
+    border: none;
+    border-bottom: 2px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    letter-spacing: 0.4px;
+  }
+
+  input[type="text"]:focus{
+    outline: none;
+    border-bottom-color: var(--gold);
+  }
+
+  input[type="text"]::placeholder{
+    color: rgba(35,50,79,0.4);
+  }
+
+  button{
+    font-family:'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    background: var(--navy);
+    color: var(--paper);
+    border: none;
+    padding: 0 22px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+
+  button:hover{ background: var(--navy-deep); }
+  button:active{ transform: scale(0.97); }
+
+  button:focus-visible, input:focus-visible{
+    outline: 2px solid var(--gold-bright);
+    outline-offset: 2px;
+  }
+
+  .feedback-row{
+    margin-top: 16px;
+    min-height: 44px;
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .feedback{
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .feedback .answer{
+    font-family:'Fraunces', serif;
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .feedback.correct{ color: var(--stamp-green); }
+  .feedback.wrong{ color: var(--stamp-red); }
+  .feedback.revealed{ color: var(--gold); }
+
+  .next-btn{
+    background: var(--gold);
+    color: var(--navy-deep);
+    flex-shrink: 0;
+  }
+  .next-btn:hover{ background: var(--gold-bright); }
+
+  .reveal-btn{
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid rgba(35,50,79,0.4);
+    flex-shrink: 0;
+    padding: 0 16px;
+  }
+  .reveal-btn:hover{ background: rgba(35,50,79,0.08); }
+  .reveal-btn:disabled{
+    opacity: 0.35;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .footer-note{
+    margin-top: 22px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(35,50,79,0.2);
+    font-size: 10.5px;
+    opacity: 0.55;
+    display:flex;
+    justify-content: space-between;
+  }
+
+  @media (max-width: 420px){
+    .passport{ padding: 24px 20px 22px; }
+    .masthead h1{ font-size: 22px; }
+    .masthead .doc-no{ display:none; }
+    form{ flex-direction: column; }
+    button{ padding: 12px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .stamp.show{ animation: none; opacity: 1; }
+    .flag-frame img{ transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<main class="start-menu" id="startMenu">
+  <section class="menu-card" aria-labelledby="menuTitle">
+    <h1 id="menuTitle">Adivina la Bandera</h1>
+    <p>Elige un nivel para comenzar el examen.</p>
+    <div class="level-list">
+      <button type="button" class="level-btn" id="startLevel1">
+        <span><strong>Nivel 1 · Banderas</strong><br><small>195 países</small></span>
+        <img class="level-image" src="banderas-nivel.webp" alt="Mosaico de banderas">
+        <span aria-hidden="true">→</span>
+      </button>
+      <button type="button" class="level-btn locked" disabled aria-label="Nivel 2 bloqueado">
+        <span><strong>Nivel 2</strong><br><small>Próximamente</small></span>
+        <span aria-hidden="true">🔒</span>
+      </button>
+    </div>
+  </section>
+</main>
+
+<div class="stage" id="gameStage" style="display:none;">
+  <div class="passport">
+    <div class="masthead">
+      <h1 style="text-align: center;">Adivina la Bandera</h1>
+    </div>
+
+    <div class="score-row">
+      <div class="score-box">
+        <span class="num" id="total">0</span>
+        <span class="lbl">RONDA</span>
+      </div>
+      <div class="score-box correct">
+        <span class="num" id="correctCount">0</span>
+        <span class="lbl">ACIERTOS</span>
+      </div>
+      <div class="score-box wrong">
+        <span class="num" id="wrongCount">0</span>
+        <span class="lbl">FALLOS</span>
+      </div>
+      <div class="score-box revealed">
+        <span class="num" id="revealedCount">0</span>
+        <span class="lbl">REVELADAS</span>
+      </div>
+    </div>
+
+    <div class="flag-frame">
+      <img id="flagImg" src="" alt="Bandera a adivinar">
+      <div class="stamp correct" id="stampCorrect">Correcto</div>
+      <div class="stamp wrong" id="stampWrong">Error</div>
+      <div class="stamp revealed" id="stampRevealed">Revelado</div>
+    </div>
+
+    <form id="guessForm" autocomplete="off">
+      <input type="text" id="guessInput" placeholder="Escribe el país…" aria-label="Nombre del país">
+      <button type="submit">Comprobar</button>
+      <button type="button" id="revealBtn" class="reveal-btn">Revelar</button>
+    </form>
+
+    <div class="feedback-row">
+      <div class="feedback" id="feedback"></div>
+      <button type="button" class="next-btn" id="nextBtn" style="display:none;">Siguiente →</button>
+    </div>
+
+    <div class="footer-note">
+      <span id="remainingNote">195 banderas en la baraja</span>
+      <span>Examen de banderas </span>
+    </div>
+  </div>
+</div>
+
+<script>
+// [country code, primary accepted name, list of alternate accepted names]
+const countries = [
+  // Europa
+  ["es","españa"], ["fr","francia"], ["de","alemania"], ["it","italia"],
+  ["pt","portugal"], ["gb","reino unido",["inglaterra","gran bretaña"]],
+  ["ie","irlanda"], ["nl","países bajos",["holanda"]], ["be","bélgica"],
+  ["ch","suiza"], ["at","austria"], ["se","suecia"], ["no","noruega"],
+  ["dk","dinamarca"], ["fi","finlandia"], ["is","islandia"], ["pl","polonia"],
+  ["gr","grecia"], ["tr","turquía"], ["ru","rusia"], ["ua","ucrania"],
+  ["cz","chequia",["república checa"]], ["hu","hungría"], ["ro","rumanía",["rumania"]],
+  ["hr","croacia"], ["rs","serbia"], ["cy","chipre"], ["mt","malta"],
+  ["lu","luxemburgo"], ["bg","bulgaria"], ["sk","eslovaquia"], ["si","eslovenia"],
+  ["ee","estonia"], ["lv","letonia"], ["lt","lituania"], ["by","bielorrusia"],
+  ["md","moldavia"], ["al","albania"], ["mk","macedonia del norte"],
+  ["ba","bosnia y herzegovina",["bosnia"]], ["me","montenegro"], ["xk","kosovo"],
+  ["ad","andorra"], ["mc","mónaco"], ["sm","san marino"], ["li","liechtenstein"],
+  ["va","ciudad del vaticano",["vaticano"]],
+
+  // América del Norte y Centroamérica y Caribe
+  ["us","estados unidos",["eeuu","ee uu"]], ["ca","canadá"], ["mx","méxico"],
+  ["gt","guatemala"], ["cu","cuba"], ["do","república dominicana"],
+  ["cr","costa rica"], ["pa","panamá"], ["ni","nicaragua"], ["hn","honduras"],
+  ["sv","el salvador"], ["bz","belice"], ["jm","jamaica"], ["ht","haití"],
+  ["bs","bahamas"], ["bb","barbados"], ["tt","trinidad y tobago"],
+  ["ag","antigua y barbuda"], ["dm","dominica"], ["gd","granada"],
+  ["kn","san cristóbal y nieves",["san cristobal y nieves"]],
+  ["lc","santa lucía",["santa lucia"]],
+  ["vc","san vicente y las granadinas"],
+
+  // América del Sur
+  ["ar","argentina"], ["br","brasil"], ["cl","chile"], ["co","colombia"],
+  ["pe","perú"], ["ve","venezuela"], ["ec","ecuador"], ["bo","bolivia"],
+  ["py","paraguay"], ["uy","uruguay"], ["gy","guyana"], ["sr","surinam"],
+
+  // Asia
+  ["cn","china"], ["jp","japón"], ["kr","corea del sur"], ["kp","corea del norte"],
+  ["in","india"], ["id","indonesia"], ["th","tailandia"], ["vn","vietnam"],
+  ["ph","filipinas"], ["my","malasia"], ["sg","singapur"], ["pk","pakistán"],
+  ["sa","arabia saudita",["arabia saudí"]], ["ae","emiratos árabes unidos"],
+  ["il","israel"], ["ir","irán"], ["iq","irak"], ["sy","siria"], ["jo","jordania"],
+  ["lb","líbano"], ["ye","yemen"], ["om","omán"], ["qa","catar"], ["kw","kuwait"],
+  ["bh","baréin"], ["af","afganistán"], ["np","nepal"], ["bd","bangladés"],
+  ["lk","sri lanka"], ["mm","myanmar",["birmania"]], ["kh","camboya"], ["la","laos"],
+  ["mn","mongolia"], ["kz","kazajistán"], ["uz","uzbekistán"], ["tm","turkmenistán"],
+  ["kg","kirguistán"], ["tj","tayikistán"], ["ge","georgia"], ["am","armenia"],
+  ["az","azerbaiyán"], ["bt","bután"], ["mv","maldivas"], ["bn","brunéi"],
+  ["tl","timor oriental"], ["ps","palestina"],
+
+  // África
+  ["eg","egipto"], ["ma","marruecos"], ["dz","argelia"], ["tn","túnez"],
+  ["ly","libia"], ["sd","sudán"], ["ss","sudán del sur"], ["ng","nigeria"],
+  ["za","sudáfrica"], ["ke","kenia"], ["et","etiopía"], ["gh","ghana"],
+  ["sn","senegal"], ["cd","república democrática del congo"], ["cg","congo",["república del congo"]],
+  ["cm","camerún"], ["ci","costa de marfil"], ["ml","malí"], ["ne","níger"],
+  ["bf","burkina faso"], ["td","chad"], ["so","somalia"], ["ug","uganda"],
+  ["tz","tanzania"], ["zm","zambia"], ["zw","zimbabue"], ["mz","mozambique"],
+  ["ao","angola"], ["mg","madagascar"], ["rw","ruanda"], ["bi","burundi"],
+  ["bj","benín"], ["tg","togo"], ["sl","sierra leona"], ["lr","liberia"],
+  ["gn","guinea"], ["gw","guinea-bisáu"], ["gq","guinea ecuatorial"], ["ga","gabón"],
+  ["mr","mauritania"], ["gm","gambia"], ["dj","yibuti"], ["er","eritrea"],
+  ["mw","malaui"], ["na","namibia"], ["bw","botsuana"], ["ls","lesoto"],
+  ["sz","esuatini",["suazilandia"]], ["mu","mauricio"], ["sc","seychelles"],
+  ["km","comoras"], ["cv","cabo verde"],
+  ["st","santo tomé y príncipe",["santo tome y principe"]],
+
+  // Oceanía
+  ["au","australia"], ["nz","nueva zelanda"], ["fj","fiyi"], ["pg","papúa nueva guinea"],
+  ["sb","islas salomón"], ["vu","vanuatu"], ["ws","samoa"], ["to","tonga"],
+  ["ki","kiribati"], ["fm","micronesia"], ["pw","palaos"], ["mh","islas marshall"],
+  ["nr","nauru"], ["tv","tuvalu"]
+];
+
+function normalize(str){
+  return str
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9 ]/g, "")
+    .trim();
+}
+
+let deck = [];
+let current = null;
+let totalRounds = 0;
+let correctCount = 0;
+let wrongCount = 0;
+let revealedCount = 0;
+let locked = false;
+let autoAdvanceTimer = null;
+
+const flagImg = document.getElementById('flagImg');
+const guessInput = document.getElementById('guessInput');
+const guessForm = document.getElementById('guessForm');
+const feedback = document.getElementById('feedback');
+const nextBtn = document.getElementById('nextBtn');
+const revealBtn = document.getElementById('revealBtn');
+const stampCorrect = document.getElementById('stampCorrect');
+const stampWrong = document.getElementById('stampWrong');
+const stampRevealed = document.getElementById('stampRevealed');
+const totalEl = document.getElementById('total');
+const correctEl = document.getElementById('correctCount');
+const wrongEl = document.getElementById('wrongCount');
+const revealedEl = document.getElementById('revealedCount');
+const remainingNote = document.getElementById('remainingNote');
+const startMenu = document.getElementById('startMenu');
+const gameStage = document.getElementById('gameStage');
+const startLevel1 = document.getElementById('startLevel1');
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function refillDeck(){
+  deck = shuffle(countries);
+}
+
+function loadNext(){
+  clearTimeout(autoAdvanceTimer);
+  autoAdvanceTimer = null;
+  locked = false;
+  stampCorrect.classList.remove('show');
+  stampWrong.classList.remove('show');
+  stampRevealed.classList.remove('show');
+  feedback.textContent = '';
+  feedback.className = 'feedback';
+  nextBtn.style.display = 'none';
+  guessInput.value = '';
+  guessInput.disabled = false;
+  revealBtn.disabled = false;
+
+  if(deck.length === 0) refillDeck();
+  current = deck.pop();
+
+  const code = current[0];
+  flagImg.classList.add('swap');
+  const url = `https://flagcdn.com/w320/${code}.png`;
+
+  const pre = new Image();
+  pre.onload = () => {
+    flagImg.src = url;
+    requestAnimationFrame(() => flagImg.classList.remove('swap'));
+  };
+  pre.onerror = () => {
+    flagImg.src = url;
+    flagImg.classList.remove('swap');
+  };
+  pre.src = url;
+
+  totalRounds++;
+  totalEl.textContent = totalRounds;
+  remainingNote.textContent = `${deck.length} banderas restantes en esta baraja`;
+
+  guessInput.focus();
+}
+
+function acceptedNames(entry){
+  const names = [entry[1]];
+  if(entry[2]) names.push(...entry[2]);
+  return names.map(normalize);
+}
+
+guessForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  if(locked || !current) return;
+
+  const guess = normalize(guessInput.value);
+  if(!guess) return;
+
+  const names = acceptedNames(current);
+  const isCorrect = names.includes(guess);
+
+  locked = true;
+  guessInput.disabled = true;
+
+  if(isCorrect){
+    correctCount++;
+    correctEl.textContent = correctCount;
+    stampCorrect.classList.add('show');
+    feedback.className = 'feedback correct';
+    feedback.innerHTML = `¡Correcto! Es <span class="answer">${capitalize(current[1])}</span>`;
+    autoAdvanceTimer = setTimeout(loadNext, 1000);
+  } else {
+    wrongCount++;
+    wrongEl.textContent = wrongCount;
+    stampWrong.classList.add('show');
+    feedback.className = 'feedback wrong';
+    feedback.innerHTML = `Era <span class="answer">${capitalize(current[1])}</span>`;
+  }
+
+  nextBtn.style.display = 'inline-block';
+});
+
+nextBtn.addEventListener('click', loadNext);
+
+revealBtn.addEventListener('click', () => {
+  if(locked || !current) return;
+
+  locked = true;
+  guessInput.disabled = true;
+  revealBtn.disabled = true;
+
+  revealedCount++;
+  revealedEl.textContent = revealedCount;
+  stampRevealed.classList.add('show');
+  feedback.className = 'feedback revealed';
+  feedback.innerHTML = `Es <span class="answer">${capitalize(current[1])}</span>`;
+
+  nextBtn.style.display = 'inline-block';
+});
+
+function capitalize(str){
+  return str.replace(/(^|\s)\S/g, c => c.toUpperCase());
+}
+
+startLevel1.addEventListener('click', () => {
+  startMenu.style.display = 'none';
+  gameStage.style.display = 'flex';
+  refillDeck();
+  loadNext();
+});
+</script>
+
+</body>
+</html>
